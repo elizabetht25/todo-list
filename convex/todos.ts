@@ -24,7 +24,7 @@ export const getTodos = query({
   handler: async (ctx) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) {
-      throw new Error("Unauthorised");
+      return []
     }
     return await ctx.db
       .query("todos")
