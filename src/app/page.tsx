@@ -1,7 +1,193 @@
+"use client";
+import { SignIn } from "@/components/signin-button";
+import { ThemeToggle } from "@/components/theme-toggle";
+import {
+  Authenticated,
+  Unauthenticated,
+  useMutation,
+  useQuery,
+} from "convex/react";
+import { Input } from "@/components/ui/input";
+import { api } from "../../convex/_generated/api";
+import { useState } from "react";
+import { toast } from "sonner";
+import { Id } from "../../convex/_generated/dataModel";
+
 export default function Home() {
   return (
-    <div>
-      <h1>hello world</h1>
+    <div className="h-screen flex flex-col items-center justify-between p-4 bg-gradient-to-b from-background to-muted/20">
+      <div className="w-full max-w-2xl mt-8">
+        <h1 className="text-2xl font-bold mb-4">Your Todo List</h1>
+        <ToDoList />
+      </div>
+      <div
+        className="w-full max-w-2xl mb-8 fixed bottom-8 left-1/2 transform -translate-x-1/2"
+        style={{ maxWidth: "calc(100% - 2rem)" }}
+      >
+        <InputBar />
+      </div>
+    </div>
+  );
+}
+function InputBar() {
+  return (
+    <div className="rounded-xl border shadow-lg bg-background p-3 flex gap-3 items-center backdrop-blur-sm bg-opacity-80">
+      <Authenticated>
+        <CreateTodoInput />
+      </Authenticated>
+
+      <Unauthenticated>
+        <div className="flex-1">
+          <SignIn />
+        </div>
+      </Unauthenticated>
+      <div className="ml-auto">
+        <ThemeToggle />
+      </div>
+    </div>
+  );
+}
+function ToDoList() {
+  const todos = useQuery(api.todos.getTodos);
+  const markTodoAsDone = useMutation(api.todos.markAsDone);
+
+  const handleToggle = async (id: Id<"todos">) => {
+    try {
+      await markTodoAsDone({ id });
+      toast.success("Todo status updated");
+    } catch {
+      toast.error("Failed to update todo");
+    }
+  };
+
+  if (todos === undefined)
+    return <p className="text-center py-4">Loading...</p>;
+
+  if (todos.length === 0)
+    return (
+      <div className="text-center py-8 text-muted-foreground">
+        No todos yet. Add some below!
+      </div>
+    );
+
+  return (
+    <div className="rounded-xl border overflow-hidden bg-background shadow-md">
+      <div className="max-h-[60vh] overflow-y-auto">
+        <table className="w-full">
+          <thead className="bg-muted/30 sticky top-0">
+            <tr>
+              <th className="p-3 text-left font-medium">Status</th>
+              <th className="p-3 text-left font-medium">Todo</th>
+            </tr>
+          </thead>
+          <tbody>
+            {todos.map((item) => (
+              <tr
+                key={item._id}
+                className="border-t hover:bg-muted/20 transition-colors"
+              >
+                <td className="p-3 w-16">
+                  <button
+                    onClick={() => handleToggle(item._id)}
+                    className={`h-6 w-6 rounded-full border flex items-center justify-center transition-all ${
+                      item.done
+                        ? "bg-primary border-primary"
+                        : "border-gray-300 hover:border-primary/50"
+                    }`}
+                  >
+                    {item.done && (
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-3.5 w-3.5 text-white"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M5 13l4 4L19 7"
+                        />
+                      </svg>
+                    )}
+                  </button>
+                </td>
+                <td className="p-3">
+                  <span
+                    className={`text-base ${
+                      item.done ? "line-through text-muted-foreground" : ""
+                    }`}
+                  >
+                    {item.title}
+                  </span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+function CreateTodoInput() {
+  const createTodo = useMutation(api.todos.createTodo);
+  const [title, setTitle] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async () => {
+    if (!title.trim() || loading) return;
+    setLoading(true);
+    try {
+      await createTodo({ title });
+      setTitle("");
+      toast.success("Todo added");
+    } catch {
+      toast.error("Failed to add todo");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit();
+    }
+  };
+
+  return (
+    <div className="flex-1 relative">
+      <Input
+        className="w-full focus-visible:ring-offset-0 pr-8 py-6 text-base"
+        disabled={loading}
+        placeholder="Type your todo here..."
+        onChange={(e) => setTitle(e.target.value)}
+        onKeyDown={handleKeyDown}
+        value={title}
+      />
+      {title.trim() && (
+        <button
+          onClick={handleSubmit}
+          disabled={loading}
+          className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-5 w-5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 4v16m8-8H4"
+            />
+          </svg>
+        </button>
+      )}
     </div>
   );
 }
