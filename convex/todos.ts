@@ -25,15 +25,44 @@ export const getTodos = query({
   handler: async (ctx) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) {
-      return []
+      return [];
     }
-    return await ctx.db
+
+    const unDoneTodos = await ctx.db
       .query("todos")
-      .withIndex("by_user", (q) => q.eq("createdBy", userId))
+      .withIndex("by_user_and_done", (q) =>
+        q.eq("createdBy", userId).eq("done", false)
+      )
+      .order("desc")
       .collect();
+    const doneTodos = await ctx.db
+      .query("todos")
+      .withIndex("by_user_and_done", (q) =>
+        q.eq("createdBy", userId).eq("done", true)
+      )
+      .order("desc")
+      .collect();
+    return [...unDoneTodos, ...doneTodos];
   },
 });
 
+export const searchTodo = query({
+  args: {
+    title: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      return [];
+    }
+    return await ctx.db
+      .query("todos")
+      .withSearchIndex("search_title", (q) =>
+        q.search("title", args.title).eq("createdBy", userId)
+      )
+      .collect();
+  },
+});
 export const markAsDone = mutation({
   args: {
     id: v.id("todos"),

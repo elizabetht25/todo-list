@@ -11,10 +11,12 @@ const schema = defineSchema({
 
   })
   .index("by_user", ["createdBy"])
+  .index("by_user_and_done", ["createdBy", "done"])
   .searchIndex("search_title", {
     searchField: "title", 
     filterFields: ["createdBy"]
-  })// Your other tables...
+  })
+  // Your other tables...
 });
  
 export default schema;
