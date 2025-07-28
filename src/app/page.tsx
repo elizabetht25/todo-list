@@ -9,18 +9,42 @@ import {
 } from "convex/react";
 import { Input } from "@/components/ui/input";
 import { api } from "../../convex/_generated/api";
-import { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Id } from "../../convex/_generated/dataModel";
-import { Pencil, Trash } from "lucide-react";
+import { Check, Pencil, Search, Trash } from "lucide-react";
 import { editTodo } from "../../convex/todos";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuCheckboxItemProps,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuPortal,
+  DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from "@radix-ui/react-dropdown-menu";
+import {
+  DropdownMenuLabel,
+  DropdownMenuShortcut,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+
+type Checked = DropdownMenuCheckboxItemProps["checked"];
 
 export default function Home() {
   return (
     <div className="h-screen flex flex-col items-center justify-between p-4 bg-gradient-to-b from-background to-muted/20">
       <div className="w-full max-w-2xl mt-8">
-        <h1 className="text-2xl font-bold mb-4">Your Todo List</h1>
-        <ToDoList />
+        <div className="gap-5 items-center mb-4">
+          <h1 className="text-2xl font-bold ">Your Todo List</h1>
+          <SearchBar />
+        </div>
+        {/* <ToDoList /> */}
       </div>
       <div
         className="w-full max-w-2xl mb-8 fixed bottom-8 left-1/2 transform -translate-x-1/2"
@@ -36,6 +60,7 @@ function InputBar() {
     <div className="rounded-xl border shadow-lg bg-background p-3 flex gap-3 items-center backdrop-blur-sm bg-opacity-80">
       <Authenticated>
         <CreateTodoInput />
+        <TagMenu />
       </Authenticated>
 
       <Unauthenticated>
@@ -49,25 +74,27 @@ function InputBar() {
     </div>
   );
 }
-function SearchToDoList() {
+function SearchBar() {
+  //Search bar constants
   const [searchValue, setSearchValue] = useState("");
   const [loading, setLoading] = useState(false);
+  const [debounceSearch, setDebounceSearch] = useState("");
 
-// const handleSearch =() => {};
-  return (<div>
-    <Input 
-        className="w-full focus-visible:ring-offset-0 pr-8 py-6 text-base"
-        disabled={loading}
-        placeholder="Search your todo here..."
-        // onChange={(e) => handleSearch(e.target.value)}
-        value={searchValue}
-    />
-  </div>);
-}
-function ToDoList() {
   const todos = useQuery(api.todos.getTodos);
   const markTodoAsDone = useMutation(api.todos.markAsDone);
   const deleteTodo = useMutation(api.todos.deleteTodo);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebounceSearch(searchValue);
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [searchValue]);
+
+  const searchResults = debounceSearch.trim()
+    ? useQuery(api.todos.searchTodo, { title: debounceSearch })
+    : useQuery(api.todos.getTodos);
 
   if (todos === undefined)
     return <p className="text-center py-4">Loading...</p>;
@@ -89,87 +116,212 @@ function ToDoList() {
   };
 
   const handleDelete = async (id: Id<"todos">) => {
-try {
-  await deleteTodo({id});
-  toast.success("Todo deleted");
-} catch {
-  toast.error("Failed to delete todo");
-}
+    try {
+      await deleteTodo({ id });
+      toast.success("Todo deleted");
+    } catch {
+      toast.error("Failed to delete todo");
+    }
+  };
+
+  const handleClearSearch = () => {
+    setSearchValue("");
+    setDebounceSearch("");
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleClearSearch();
+    }
   };
 
   return (
-    <div className="rounded-xl border overflow-hidden bg-background shadow-md">
-      <div className="max-h-[60vh] overflow-y-auto">
-        <table className="w-full">
-          <thead className=" sticky top-0 border-b ">
-            <tr>
-              <th className="p-3 text-left font-medium">Status</th>
-              <th className="p-3 text-left font-medium">Todo</th>
-            </tr>
-          </thead>
-          <tbody>
-            {todos.map((item) => (
-              <tr
-                key={item._id}
-                className="border-t hover:bg-muted/20 transition-colors "
-              >
-                <td className="p-3 w-16">
-                  <button
-                    onClick={() => handleToggle(item._id)}
-                    className={`h-6 w-6 rounded-full border flex items-center justify-center transition-all ${
-                      item.done
-                        ? "bg-primary border-primary"
-                        : "border-gray-300 hover:border-primary/50"
-                    }`}
-                  >
-                    {item.done && (
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-3.5 w-3.5 text-white"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M5 13l4 4L19 7"
-                        />
-                      </svg>
-                    )}
-                  </button>
-                </td>
-                <td className="p-3">
-                  <span
-                    className={`text-base ${
-                      item.done ? "line-through text-muted-foreground" : ""
-                    }`}
-                  >
-                    {item.title}
-                  </span>
-                </td>
-                <td className="p-1">
-                  <button >
-                    <Pencil className="text-border hover:text-foreground/90 transition-colors"/>
-                  </button>
-                 
-                </td>
-                <td className="p-3">
-                  <button onClick={() => handleDelete(item._id)}>
-                    <Trash className="text-border hover:text-foreground/90 transition-colors"/>
-                  </button>
-                </td>
+    <div className="flex flex-col gap-5">
+      <div className="flex items-center gap-5 rounded-lg p-2 flex-grow">
+        <Input
+          className="w-full focus-visible:ring-offset-0 pr-8 py-6 text-base"
+          disabled={loading}
+          placeholder="Search your todo here..."
+          onChange={(e) => setSearchValue(e.target.value)}
+          onKeyDown={handleKeyDown}
+          value={searchValue}
+        />
+      </div>
+
+      <div className="rounded-xl border overflow-hidden bg-background shadow-md">
+        <div className="max-h-[60vh] overflow-y-auto">
+          <table className="">
+            <thead className="sticky top-0 bg-background border-b-2 border-border z-10">
+              <tr>
+                <th className="p-3 text-left font-medium">Status</th>
+                <th className="p-3 text-left font-medium">Todo</th>
+                <th className="p-3 text-left font-medium">Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="overflow-y-auto ">
+              {searchResults &&
+                searchResults.map((item) => (
+                  <tr
+                    key={item._id}
+                    className="border-t hover:bg-muted/20 transition-colors"
+                  >
+                    <td className="p-3 w-16">
+                      <button
+                        onClick={() => handleToggle(item._id)}
+                        className={`h-6 w-6 rounded-full border flex items-center justify-center transition-all ${
+                          item.done
+                            ? "bg-primary border-primary"
+                            : "border-gray-300 hover:border-primary/50"
+                        }`}
+                      >
+                        {item.done && (
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-3.5 w-3.5 text-white"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M5 13l4 4L19 7"
+                            />
+                          </svg>
+                        )}
+                      </button>
+                    </td>
+                    <td className="p-3 flex-1">
+                      <span
+                        className={`text-base ${
+                          item.done ? "line-through text-muted-foreground" : ""
+                        }`}
+                      >
+                        {item.title}
+                      </span>
+                    </td>
+                    <td className="p-3 w-16">
+                      <button onClick={() => handleDelete(item._id)}>
+                        <Trash className="text-border hover:text-foreground/90 transition-colors" />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );
 }
+// function ToDoList() {
+//   const todos = useQuery(api.todos.getTodos);
+//   const markTodoAsDone = useMutation(api.todos.markAsDone);
+//   const deleteTodo = useMutation(api.todos.deleteTodo);
+
+//   if (todos === undefined)
+//     return <p className="text-center py-4">Loading...</p>;
+
+//   if (todos.length === 0)
+//     return (
+//       <div className="text-center py-8 text-muted-foreground">
+//         No todos yet. Add some below!
+//       </div>
+//     );
+
+//   const handleToggle = async (id: Id<"todos">) => {
+//     try {
+//       await markTodoAsDone({ id });
+//       toast.success("Todo status updated");
+//     } catch {
+//       toast.error("Failed to update todo");
+//     }
+//   };
+
+//   const handleDelete = async (id: Id<"todos">) => {
+// try {
+//   await deleteTodo({id});
+//   toast.success("Todo deleted");
+// } catch {
+//   toast.error("Failed to delete todo");
+// }
+//   };
+
+//   return (
+//     <div className="rounded-xl border overflow-hidden bg-background shadow-md">
+//       <div className="max-h-[65vh] overflow-y-auto">
+//         <table className="">
+//           <thead className="sticky top-0 border-b-2 z-10">
+//             <tr className="border ">
+//               <th className="p-3 text-left font-medium">Status</th>
+//               <th className="p-3 text-left font-medium">Todo</th>
+//             </tr>
+//           </thead>
+//           <tbody className="overflow-y-auto ">
+//             {todos.map((item) => (
+//               <tr
+//                 key={item._id}
+//                 className="border-t hover:bg-muted/20 transition-colors "
+//               >
+//                 <td className="p-3 w-16">
+//                   <button
+//                     onClick={() => handleToggle(item._id)}
+//                     className={`h-6 w-6 rounded-full border flex items-center justify-center transition-all ${
+//                       item.done
+//                         ? "bg-primary border-primary"
+//                         : "border-gray-300 hover:border-primary/50"
+//                     }`}
+//                   >
+//                     {item.done && (
+//                       <svg
+//                         xmlns="http://www.w3.org/2000/svg"
+//                         className="h-3.5 w-3.5 text-white"
+//                         fill="none"
+//                         viewBox="0 0 24 24"
+//                         stroke="currentColor"
+//                       >
+//                         <path
+//                           strokeLinecap="round"
+//                           strokeLinejoin="round"
+//                           strokeWidth={2}
+//                           d="M5 13l4 4L19 7"
+//                         />
+//                       </svg>
+//                     )}
+//                   </button>
+//                 </td>
+//                 <td className="p-3">
+//                   <span
+//                     className={`text-base ${
+//                       item.done ? "line-through text-muted-foreground" : ""
+//                     }`}
+//                   >
+//                     {item.title}
+//                   </span>
+//                 </td>
+//                 <td className="p-1">
+//                   <button >
+//                     <Pencil className="text-border hover:text-foreground/90 transition-colors"/>
+//                   </button>
+
+//                 </td>
+//                 <td className="p-3">
+//                   <button onClick={() => handleDelete(item._id)}>
+//                     <Trash className="text-border hover:text-foreground/90 transition-colors"/>
+//                   </button>
+//                 </td>
+//               </tr>
+//             ))}
+//           </tbody>
+//         </table>
+//       </div>
+//     </div>
+//   );
+// }
 function EditTodo() {
-  return(<div></div>);
+  return <div></div>;
 }
 function CreateTodoInput() {
   const createTodo = useMutation(api.todos.createTodo);
@@ -229,6 +381,62 @@ function CreateTodoInput() {
           </svg>
         </button>
       )}
+    </div>
+  );
+}
+
+function TagMenu() {
+  const [showBars, setShowBars] = React.useState<Checked>(false);
+  const [showUrgent, setShowUrgent] = React.useState<Checked>(false);
+  const [showMeme, setShowMeme] = React.useState<Checked>(false);
+  const [showHobbies, setShowHobbies] = React.useState<Checked>(false);
+
+  return (
+    <div>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="default">Tags</Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent
+          className="w-56 bg-background p-5 rounded-xl shadow mx-5 my-10"
+          align="start"
+        >
+          <DropdownMenuGroup>
+            <DropdownMenuCheckboxItem
+              checked={showBars}
+              onCheckedChange={setShowBars}
+              className="hover:bg-secondary rounded-xl px-2 py-1 flex gap-2"
+            >
+              Bars
+              {showBars && <Check className="w-4" />}
+            </DropdownMenuCheckboxItem>
+            <DropdownMenuCheckboxItem
+              checked={showUrgent}
+              onCheckedChange={setShowUrgent}
+              className="hover:bg-secondary rounded-xl px-2 py-1 flex gap-2"
+            >
+              Urgent
+              {showUrgent && <Check className="w-4" />}
+            </DropdownMenuCheckboxItem>
+            <DropdownMenuCheckboxItem
+              checked={showMeme}
+              onCheckedChange={setShowMeme}
+              className="hover:bg-secondary rounded-xl px-2 py-1 flex gap-2"
+            >
+              Meme
+              {showMeme && <Check className="w-4" />}
+            </DropdownMenuCheckboxItem>
+            <DropdownMenuCheckboxItem
+              checked={showHobbies}
+              onCheckedChange={setShowHobbies}
+              className="hover:bg-secondary rounded-xl px-2 py-1 flex gap-2"
+            >
+              Hobbies
+              {showHobbies && <Check className="w-4" />}
+            </DropdownMenuCheckboxItem>
+          </DropdownMenuGroup>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
   );
 }
