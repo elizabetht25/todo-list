@@ -1,6 +1,7 @@
 import { convexToJson, v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { getAuthUserId } from "@convex-dev/auth/server";
+import { title } from "process";
 
 export const createTodo = mutation({
   args: {
@@ -48,5 +49,33 @@ export const markAsDone = mutation({
     return await ctx.db.patch(args.id, {
       done: !todo.done,
     });
+  },
+});
+
+export const editTodo = mutation({
+  args: {
+    id: v.id("todos"),
+    title: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Unauthorised");
+
+    return await ctx.db.patch(args.id, {
+      title: args.title,
+    });
+  },
+});
+
+export const deleteTodo = mutation({
+  args: {
+    id: v.id("todos"),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Unauthorised");
+
+    await ctx.db.delete(args.id);
+    return { success: true };
   },
 });

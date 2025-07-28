@@ -12,6 +12,8 @@ import { api } from "../../convex/_generated/api";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Id } from "../../convex/_generated/dataModel";
+import { Pencil, Trash } from "lucide-react";
+import { editTodo } from "../../convex/todos";
 
 export default function Home() {
   return (
@@ -47,18 +49,25 @@ function InputBar() {
     </div>
   );
 }
+function SearchToDoList() {
+  const [searchValue, setSearchValue] = useState("");
+  const [loading, setLoading] = useState(false);
+
+// const handleSearch =() => {};
+  return (<div>
+    <Input 
+        className="w-full focus-visible:ring-offset-0 pr-8 py-6 text-base"
+        disabled={loading}
+        placeholder="Search your todo here..."
+        // onChange={(e) => handleSearch(e.target.value)}
+        value={searchValue}
+    />
+  </div>);
+}
 function ToDoList() {
   const todos = useQuery(api.todos.getTodos);
   const markTodoAsDone = useMutation(api.todos.markAsDone);
-
-  const handleToggle = async (id: Id<"todos">) => {
-    try {
-      await markTodoAsDone({ id });
-      toast.success("Todo status updated");
-    } catch {
-      toast.error("Failed to update todo");
-    }
-  };
+  const deleteTodo = useMutation(api.todos.deleteTodo);
 
   if (todos === undefined)
     return <p className="text-center py-4">Loading...</p>;
@@ -70,11 +79,29 @@ function ToDoList() {
       </div>
     );
 
+  const handleToggle = async (id: Id<"todos">) => {
+    try {
+      await markTodoAsDone({ id });
+      toast.success("Todo status updated");
+    } catch {
+      toast.error("Failed to update todo");
+    }
+  };
+
+  const handleDelete = async (id: Id<"todos">) => {
+try {
+  await deleteTodo({id});
+  toast.success("Todo deleted");
+} catch {
+  toast.error("Failed to delete todo");
+}
+  };
+
   return (
     <div className="rounded-xl border overflow-hidden bg-background shadow-md">
       <div className="max-h-[60vh] overflow-y-auto">
         <table className="w-full">
-          <thead className="bg-muted/30 sticky top-0">
+          <thead className=" sticky top-0 border-b ">
             <tr>
               <th className="p-3 text-left font-medium">Status</th>
               <th className="p-3 text-left font-medium">Todo</th>
@@ -84,7 +111,7 @@ function ToDoList() {
             {todos.map((item) => (
               <tr
                 key={item._id}
-                className="border-t hover:bg-muted/20 transition-colors"
+                className="border-t hover:bg-muted/20 transition-colors "
               >
                 <td className="p-3 w-16">
                   <button
@@ -122,6 +149,17 @@ function ToDoList() {
                     {item.title}
                   </span>
                 </td>
+                <td className="p-1">
+                  <button >
+                    <Pencil className="text-border hover:text-foreground/90 transition-colors"/>
+                  </button>
+                 
+                </td>
+                <td className="p-3">
+                  <button onClick={() => handleDelete(item._id)}>
+                    <Trash className="text-border hover:text-foreground/90 transition-colors"/>
+                  </button>
+                </td>
               </tr>
             ))}
           </tbody>
@@ -129,6 +167,9 @@ function ToDoList() {
       </div>
     </div>
   );
+}
+function EditTodo() {
+  return(<div></div>);
 }
 function CreateTodoInput() {
   const createTodo = useMutation(api.todos.createTodo);
