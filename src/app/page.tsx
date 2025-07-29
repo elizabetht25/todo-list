@@ -35,17 +35,29 @@ import {
   DropdownMenuShortcut,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
+import { Sign } from "crypto";
 
 type Checked = DropdownMenuCheckboxItemProps["checked"];
 
 export default function Home() {
+  //User constants
+  const user = useQuery(api.todos.getUser);
+ 
   return (
     <div className="h-screen flex flex-col items-center justify-between p-4 bg-gradient-to-b from-background to-muted/20">
       <div className="w-full max-w-2xl mt-8">
-        <div className="gap-5 items-center mb-4">
+        <div className="gap-5 items-center flex">
+          <Authenticated>
+            <h1 className="text-2xl font-bold">Welcome, {user?.name}!</h1>
+            </Authenticated>
+          <Unauthenticated>
           <h1 className="text-2xl font-bold ">Your Todo List</h1>
-          <SearchBar />
+          </Unauthenticated>
+          <div className="ml-auto p-2">
+          <SignIn />
+          </div>
         </div>
+        <SearchBar />
       </div>
       <div
         className="w-full max-w-2xl mb-8 fixed bottom-8 left-1/2 transform -translate-x-1/2"
@@ -62,12 +74,12 @@ function InputBar() {
       <Authenticated>
         <CreateTodoInput />
       </Authenticated>
-
       <Unauthenticated>
-        <div className="flex-1">
-          <SignIn />
-        </div>
-      </Unauthenticated>
+        <div className="text-muted-foreground">
+          Please sign in to add todos.
+          </div>
+        </Unauthenticated>
+
       <div className="ml-auto">
         <ThemeToggle />
       </div>
@@ -180,13 +192,13 @@ function SearchBar() {
       <div className="rounded-xl border overflow-hidden bg-background shadow-md">
         <div className="max-h-[60vh] overflow-y-auto">
           <table className="w-full table-fixed">
-            <thead className="sticky top-0 bg-background border-b-2 border-border z-10">
+            {/* <thead className="sticky top-0 bg-background border-b-2 border-border z-10">
               <tr>
                 <th className="p-3 text-left font-medium w-16">Status</th>
                 <th className="p-3 text-left font-medium">Todo</th>
                 <th className="p-3 text-left font-medium w-16">Action</th>
               </tr>
-            </thead>
+            </thead> */}
             <tbody className="overflow-y-auto ">
               {searchResults &&
                 searchResults.map((item) => (
@@ -236,7 +248,7 @@ function SearchBar() {
                       )}
                     </td>
                     <td className="p-3 w-16 text-center">
-                      <button onClick={() => handleDelete(item._id)}>
+                      <button onClick={() => handleDelete(item._id)} className="opacity-0 hover:opacity-100 transition-opacity">
                         <Trash className="text-border hover:text-foreground/90 transition-colors" />
                       </button>
                     </td>
@@ -249,110 +261,6 @@ function SearchBar() {
     </div>
   );
 }
-// function ToDoList() {
-//   const todos = useQuery(api.todos.getTodos);
-//   const markTodoAsDone = useMutation(api.todos.markAsDone);
-//   const deleteTodo = useMutation(api.todos.deleteTodo);
-
-//   if (todos === undefined)
-//     return <p className="text-center py-4">Loading...</p>;
-
-//   if (todos.length === 0)
-//     return (
-//       <div className="text-center py-8 text-muted-foreground">
-//         No todos yet. Add some below!
-//       </div>
-//     );
-
-//   const handleToggle = async (id: Id<"todos">) => {
-//     try {
-//       await markTodoAsDone({ id });
-//       toast.success("Todo status updated");
-//     } catch {
-//       toast.error("Failed to update todo");
-//     }
-//   };
-
-//   const handleDelete = async (id: Id<"todos">) => {
-// try {
-//   await deleteTodo({id});
-//   toast.success("Todo deleted");
-// } catch {
-//   toast.error("Failed to delete todo");
-// }
-//   };
-
-//   return (
-//     <div className="rounded-xl border overflow-hidden bg-background shadow-md">
-//       <div className="max-h-[65vh] overflow-y-auto">
-//         <table className="">
-//           <thead className="sticky top-0 border-b-2 z-10">
-//             <tr className="border ">
-//               <th className="p-3 text-left font-medium">Status</th>
-//               <th className="p-3 text-left font-medium">Todo</th>
-//             </tr>
-//           </thead>
-//           <tbody className="overflow-y-auto ">
-//             {todos.map((item) => (
-//               <tr
-//                 key={item._id}
-//                 className="border-t hover:bg-muted/20 transition-colors "
-//               >
-//                 <td className="p-3 w-16">
-//                   <button
-//                     onClick={() => handleToggle(item._id)}
-//                     className={`h-6 w-6 rounded-full border flex items-center justify-center transition-all ${
-//                       item.done
-//                         ? "bg-primary border-primary"
-//                         : "border-gray-300 hover:border-primary/50"
-//                     }`}
-//                   >
-//                     {item.done && (
-//                       <svg
-//                         xmlns="http://www.w3.org/2000/svg"
-//                         className="h-3.5 w-3.5 text-white"
-//                         fill="none"
-//                         viewBox="0 0 24 24"
-//                         stroke="currentColor"
-//                       >
-//                         <path
-//                           strokeLinecap="round"
-//                           strokeLinejoin="round"
-//                           strokeWidth={2}
-//                           d="M5 13l4 4L19 7"
-//                         />
-//                       </svg>
-//                     )}
-//                   </button>
-//                 </td>
-//                 <td className="p-3">
-//                   <span
-//                     className={`text-base ${
-//                       item.done ? "line-through text-muted-foreground" : ""
-//                     }`}
-//                   >
-//                     {item.title}
-//                   </span>
-//                 </td>
-//                 <td className="p-1">
-//                   <button >
-//                     <Pencil className="text-border hover:text-foreground/90 transition-colors"/>
-//                   </button>
-
-//                 </td>
-//                 <td className="p-3">
-//                   <button onClick={() => handleDelete(item._id)}>
-//                     <Trash className="text-border hover:text-foreground/90 transition-colors"/>
-//                   </button>
-//                 </td>
-//               </tr>
-//             ))}
-//           </tbody>
-//         </table>
-//       </div>
-//     </div>
-//   );
-// }
 
 function CreateTodoInput() {
   const createTodo = useMutation(api.todos.createTodo);
