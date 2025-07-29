@@ -22,6 +22,7 @@ import {
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuPortal,
+  DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuSub,
   DropdownMenuSubContent,
@@ -30,6 +31,7 @@ import {
 } from "@radix-ui/react-dropdown-menu";
 import {
   DropdownMenuLabel,
+  DropdownMenuRadioGroup,
   DropdownMenuShortcut,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
@@ -60,7 +62,6 @@ function InputBar() {
     <div className="rounded-xl border shadow-lg bg-background p-3 flex gap-3 items-center backdrop-blur-sm bg-opacity-80">
       <Authenticated>
         <CreateTodoInput />
-        <TagMenu />
       </Authenticated>
 
       <Unauthenticated>
@@ -350,7 +351,7 @@ function CreateTodoInput() {
   };
 
   return (
-    <div className="flex-1 relative">
+    <div className="flex-1 relative flex gap-3 items-center">
       <Input
         className="w-full focus-visible:ring-offset-0 pr-8 py-6 text-base"
         disabled={loading}
@@ -381,15 +382,14 @@ function CreateTodoInput() {
           </svg>
         </button>
       )}
+      <TagMenu />
     </div>
   );
 }
 
 function TagMenu() {
-  const [showBars, setShowBars] = React.useState<Checked>(false);
-  const [showUrgent, setShowUrgent] = React.useState<Checked>(false);
-  const [showMeme, setShowMeme] = React.useState<Checked>(false);
-  const [showHobbies, setShowHobbies] = React.useState<Checked>(false);
+
+  const[position, setPosition] = React.useState("personal");
 
   return (
     <div>
@@ -401,40 +401,33 @@ function TagMenu() {
           className="w-56 bg-background p-5 rounded-xl shadow mx-5 my-10"
           align="start"
         >
-          <DropdownMenuGroup>
-            <DropdownMenuCheckboxItem
-              checked={showBars}
-              onCheckedChange={setShowBars}
+          <DropdownMenuRadioGroup value={position} onValueChange={(setPosition)}>
+            <DropdownMenuRadioItem
+             value="personal"
               className="hover:bg-secondary rounded-xl px-2 py-1 flex gap-2"
             >
-              Bars
-              {showBars && <Check className="w-4" />}
-            </DropdownMenuCheckboxItem>
-            <DropdownMenuCheckboxItem
-              checked={showUrgent}
-              onCheckedChange={setShowUrgent}
+              Personal
+{position=="personal" && <Check className="w-4" />}
+            </DropdownMenuRadioItem>
+            <DropdownMenuRadioItem value="work"
+              className="hover:bg-secondary rounded-xl px-2 py-1 flex gap-2"
+            >
+              Work
+              {position=="work" && <Check className="w-4" />}
+            </DropdownMenuRadioItem>
+            <DropdownMenuRadioItem value="bills"
+              className="hover:bg-secondary rounded-xl px-2 py-1 flex gap-2"
+            >
+              Bills
+              {position=="bills" && <Check className="w-4" />}
+            </DropdownMenuRadioItem>
+            <DropdownMenuRadioItem value="urgent"
               className="hover:bg-secondary rounded-xl px-2 py-1 flex gap-2"
             >
               Urgent
-              {showUrgent && <Check className="w-4" />}
-            </DropdownMenuCheckboxItem>
-            <DropdownMenuCheckboxItem
-              checked={showMeme}
-              onCheckedChange={setShowMeme}
-              className="hover:bg-secondary rounded-xl px-2 py-1 flex gap-2"
-            >
-              Meme
-              {showMeme && <Check className="w-4" />}
-            </DropdownMenuCheckboxItem>
-            <DropdownMenuCheckboxItem
-              checked={showHobbies}
-              onCheckedChange={setShowHobbies}
-              className="hover:bg-secondary rounded-xl px-2 py-1 flex gap-2"
-            >
-              Hobbies
-              {showHobbies && <Check className="w-4" />}
-            </DropdownMenuCheckboxItem>
-          </DropdownMenuGroup>
+              {position=="urgent" && <Check className="w-4" />}
+            </DropdownMenuRadioItem>
+          </DropdownMenuRadioGroup>
         </DropdownMenuContent>
       </DropdownMenu>
     </div>

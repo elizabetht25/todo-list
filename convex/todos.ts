@@ -5,6 +5,7 @@ import { getAuthUserId } from "@convex-dev/auth/server";
 export const createTodo = mutation({
   args: {
     title: v.string(),
+    // tag:v.string(),
   },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
@@ -15,6 +16,7 @@ export const createTodo = mutation({
       title: args.title,
       done: false,
       createdBy: userId,
+      // tags: args.tags,
     });
   },
 });
@@ -53,23 +55,6 @@ export const searchTodo = query({
     const userId = await getAuthUserId(ctx);
     if (!userId) {
       return [];
-    }
-    if(!args.title.trim()) {
-    const unDoneTodos = await ctx.db
-      .query("todos")
-      .withIndex("by_user_and_done", (q) =>
-        q.eq("createdBy", userId).eq("done", false)
-      )
-      .order("desc")
-      .collect();
-    const doneTodos = await ctx.db
-      .query("todos")
-      .withIndex("by_user_and_done", (q) =>
-        q.eq("createdBy", userId).eq("done", true)
-      )
-      .order("desc")
-      .collect();
-    return [...unDoneTodos, ...doneTodos];
     }
     return await ctx.db
       .query("todos")

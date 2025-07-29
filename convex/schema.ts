@@ -8,7 +8,7 @@ const schema = defineSchema({
     title: v.string(), 
     done: v.boolean(),
     createdBy: v.id("users"),
-    // tags: v.array(v.string()),
+    // tag: v.string(),
 
   })
   .index("by_user", ["createdBy"])
