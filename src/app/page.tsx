@@ -80,7 +80,7 @@ function SearchBar() {
   const [searchValue, setSearchValue] = useState("");
   const [loading, setLoading] = useState(false);
   const [debounceSearch, setDebounceSearch] = useState("");
-
+//Table constants
   const todos = useQuery(api.todos.getTodos);
   const markTodoAsDone = useMutation(api.todos.markAsDone);
   const deleteTodo = useMutation(api.todos.deleteTodo);
@@ -88,7 +88,7 @@ function SearchBar() {
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebounceSearch(searchValue);
-    }, 100);
+    }, 400);
 
     return () => clearTimeout(timer);
   }, [searchValue]);
@@ -149,6 +149,24 @@ function SearchBar() {
           value={searchValue}
         />
       </div>
+      <div className="flex gap-5">
+        <Button>
+          All tags
+        </Button>
+        <Button variant="destructive">
+          # personal
+        </Button>
+
+        <Button variant="destructive">
+          # work
+        </Button>
+        <Button variant="destructive">
+          # bills
+        </Button>
+        <Button variant="destructive">
+          # urgent
+        </Button>
+      </div>
 
       <div className="rounded-xl border overflow-hidden bg-background shadow-md">
         <div className="max-h-[60vh] overflow-y-auto">
@@ -194,7 +212,7 @@ function SearchBar() {
                         )}
                       </button>
                     </td>
-                    <td className="p-3 flex-1">
+                    <td className="p-3 flex-1 flex-col">
                       <span
                         className={`text-base ${
                           item.done ? "line-through text-muted-foreground" : ""
@@ -202,6 +220,13 @@ function SearchBar() {
                       >
                         {item.title}
                       </span>
+                      {item.tag &&
+                      <div>
+                      <Button variant="ghost">
+                        {item.tag}
+                      </Button>
+                      </div>
+                      }
                     </td>
                     <td className="p-3 w-16">
                       <button onClick={() => handleDelete(item._id)}>
@@ -329,11 +354,13 @@ function CreateTodoInput() {
   const [title, setTitle] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const [tag, setTag] = React.useState("personal");
+
   const handleSubmit = async () => {
     if (!title.trim() || loading) return;
     setLoading(true);
     try {
-      await createTodo({ title });
+      await createTodo({ title, tag});
       setTitle("");
       toast.success("Todo added");
     } catch {
@@ -350,8 +377,8 @@ function CreateTodoInput() {
     }
   };
 
-  return (
-    <div className="flex-1 relative flex gap-3 items-center">
+  return (<div className="flex-1 flex gap-3 items-center">
+    <div className="flex-1 relative flex gap-3 items-center ">
       <Input
         className="w-full focus-visible:ring-offset-0 pr-8 py-6 text-base"
         disabled={loading}
@@ -382,54 +409,52 @@ function CreateTodoInput() {
           </svg>
         </button>
       )}
-      <TagMenu />
-    </div>
-  );
-}
-
-function TagMenu() {
-
-  const[position, setPosition] = React.useState("personal");
-
-  return (
-    <div>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="default">Tags</Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent
-          className="w-56 bg-background p-5 rounded-xl shadow mx-5 my-10"
-          align="start"
-        >
-          <DropdownMenuRadioGroup value={position} onValueChange={(setPosition)}>
-            <DropdownMenuRadioItem
-             value="personal"
-              className="hover:bg-secondary rounded-xl px-2 py-1 flex gap-2"
+      </div>
+      <div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="default">Tags</Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            className="w-56 bg-background p-5 rounded-xl shadow mx-5 my-10"
+            align="start"
+          >
+            <DropdownMenuRadioGroup
+              value={tag}
+              onValueChange={setTag}
             >
-              Personal
-{position=="personal" && <Check className="w-4" />}
-            </DropdownMenuRadioItem>
-            <DropdownMenuRadioItem value="work"
-              className="hover:bg-secondary rounded-xl px-2 py-1 flex gap-2"
-            >
-              Work
-              {position=="work" && <Check className="w-4" />}
-            </DropdownMenuRadioItem>
-            <DropdownMenuRadioItem value="bills"
-              className="hover:bg-secondary rounded-xl px-2 py-1 flex gap-2"
-            >
-              Bills
-              {position=="bills" && <Check className="w-4" />}
-            </DropdownMenuRadioItem>
-            <DropdownMenuRadioItem value="urgent"
-              className="hover:bg-secondary rounded-xl px-2 py-1 flex gap-2"
-            >
-              Urgent
-              {position=="urgent" && <Check className="w-4" />}
-            </DropdownMenuRadioItem>
-          </DropdownMenuRadioGroup>
-        </DropdownMenuContent>
-      </DropdownMenu>
+              <DropdownMenuRadioItem
+                value="# personal"
+                className="hover:bg-secondary rounded-xl px-2 py-1 flex gap-2"
+              >
+                Personal
+                {tag == "# personal" && <Check className="w-4" />}
+              </DropdownMenuRadioItem>
+              <DropdownMenuRadioItem
+                value="# work"
+                className="hover:bg-secondary rounded-xl px-2 py-1 flex gap-2"
+              >
+                Work
+                {tag == "# work" && <Check className="w-4" />}
+              </DropdownMenuRadioItem>
+              <DropdownMenuRadioItem
+                value="# bills"
+                className="hover:bg-secondary rounded-xl px-2 py-1 flex gap-2"
+              >
+                Bills
+                {tag == "# bills" && <Check className="w-4" />}
+              </DropdownMenuRadioItem>
+              <DropdownMenuRadioItem
+                value="# urgent"
+                className="hover:bg-secondary rounded-xl px-2 py-1 flex gap-2"
+              >
+                Urgent
+                {tag == "# urgent" && <Check className="w-4" />}
+              </DropdownMenuRadioItem>
+            </DropdownMenuRadioGroup>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
     </div>
   );
 }

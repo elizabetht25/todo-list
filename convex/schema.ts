@@ -8,15 +8,19 @@ const schema = defineSchema({
     title: v.string(), 
     done: v.boolean(),
     createdBy: v.id("users"),
-    // tag: v.string(),
+    tag: v.string(),
 
   })
   .index("by_user", ["createdBy"])
   .index("by_user_and_done", ["createdBy", "done"])
   .searchIndex("search_title", {
     searchField: "title", 
-    filterFields: ["createdBy"]
+    filterFields: ["createdBy", "done"]
   })
+  .searchIndex("search_tag", {
+    searchField: "tag",
+    filterFields: ["createdBy"]
+  }),
   // Your other tables...
 });
  

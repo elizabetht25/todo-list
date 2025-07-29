@@ -5,7 +5,7 @@ import { getAuthUserId } from "@convex-dev/auth/server";
 export const createTodo = mutation({
   args: {
     title: v.string(),
-    // tag:v.string(),
+    tag:v.string(),
   },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
@@ -16,7 +16,7 @@ export const createTodo = mutation({
       title: args.title,
       done: false,
       createdBy: userId,
-      // tags: args.tags,
+      tag: args.tag,
     });
   },
 });
@@ -56,14 +56,37 @@ export const searchTodo = query({
     if (!userId) {
       return [];
     }
-    return await ctx.db
-      .query("todos")
+const searchUnDoneTodos = await ctx.db.query("todos")
       .withSearchIndex("search_title", (q) =>
-        q.search("title", args.title).eq("createdBy", userId)
+        q.search("title", args.title).eq("createdBy", userId).eq("done", false)
       )
       .collect();
+    const searchDoneTodos = await ctx.db.query("todos")
+      .withSearchIndex("search_title", (q) =>
+        q.search("title", args.title).eq("createdBy", userId).eq("done", true)
+      )
+      .collect();
+
+    return [...searchUnDoneTodos, ...searchDoneTodos]
   },
 });
+export const getTodosByTag = query({
+  args:{
+    tag: v.string(),
+  },
+  handler: async (ctx , args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      return [];
+    }
+    return await ctx.db
+    .query("todos")
+    .withSearchIndex("search_tag", (q) =>
+      q.search("tag", args.tag).eq("createdBy", userId)
+    )
+    .collect();
+  }
+})
 export const markAsDone = mutation({
   args: {
     id: v.id("todos"),
