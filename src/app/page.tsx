@@ -53,10 +53,12 @@ export default function Home() {
           <Unauthenticated>
           <h1 className="text-2xl font-bold ">Your Todo List</h1>
           </Unauthenticated>
-          <div className="ml-auto p-2">
+          <div className="ml-auto p-2 flex gap-2">
+            <ThemeToggle />
           <SignIn />
           </div>
         </div>
+        
         <SearchBar />
       </div>
       <div
@@ -80,9 +82,7 @@ function InputBar() {
           </div>
         </Unauthenticated>
 
-      <div className="ml-auto">
-        <ThemeToggle />
-      </div>
+  
     </div>
   );
 }
@@ -172,19 +172,19 @@ function SearchBar() {
       <div className="flex gap-5">
         <Button onClick={() => handleFilter("")}>All tags</Button>
         <Button
-          variant="destructive"
+          variant="ghost"
           onClick={() => handleFilter("# personal")}
         >
           # personal
         </Button>
 
-        <Button variant="destructive" onClick={() => handleFilter("# work")}>
+        <Button variant="ghost" onClick={() => handleFilter("# work")}>
           # work
         </Button>
-        <Button variant="destructive" onClick={() => handleFilter("# bills")}>
+        <Button variant="ghost" onClick={() => handleFilter("# bills")}>
           # bills
         </Button>
-        <Button variant="destructive" onClick={() => handleFilter("# urgent")}>
+        <Button variant="ghost" onClick={() => handleFilter("# urgent")}>
           # urgent
         </Button>
       </div>
