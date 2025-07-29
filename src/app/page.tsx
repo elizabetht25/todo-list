@@ -46,7 +46,6 @@ export default function Home() {
           <h1 className="text-2xl font-bold ">Your Todo List</h1>
           <SearchBar />
         </div>
-        {/* <ToDoList /> */}
       </div>
       <div
         className="w-full max-w-2xl mb-8 fixed bottom-8 left-1/2 transform -translate-x-1/2"
@@ -81,13 +80,13 @@ function SearchBar() {
   const [loading, setLoading] = useState(false);
   const [debounceSearch, setDebounceSearch] = useState("");
 
-//Table constants
+  //Table constants
   const todos = useQuery(api.todos.getTodos);
   const markTodoAsDone = useMutation(api.todos.markAsDone);
   const deleteTodo = useMutation(api.todos.deleteTodo);
-//Filter constants
+  //Filter constants
   const [filterTag, setFilterTag] = useState("");
-//Debouncer
+  //Debouncer
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebounceSearch(searchValue);
@@ -100,10 +99,10 @@ function SearchBar() {
     ? useQuery(api.todos.searchTodo, { title: debounceSearch })
     : useQuery(api.todos.getTodos);
 
-    if(filterTag.trim() && searchResults) {
-      searchResults = searchResults.filter((todo) => todo.tag === filterTag);
-    }
-//Loading state
+  if (filterTag.trim() && searchResults) {
+    searchResults = searchResults.filter((todo) => todo.tag === filterTag);
+  }
+  //Loading state
   if (todos === undefined)
     return <p className="text-center py-4">Loading...</p>;
 
@@ -113,7 +112,7 @@ function SearchBar() {
         No todos yet. Add some below!
       </div>
     );
-//Table functions
+  //Table functions
   const handleToggle = async (id: Id<"todos">) => {
     try {
       await markTodoAsDone({ id });
@@ -131,7 +130,7 @@ function SearchBar() {
       toast.error("Failed to delete todo");
     }
   };
-//Search bar functions
+  //Search bar functions
   const handleClearSearch = () => {
     setSearchValue("");
     setDebounceSearch("");
@@ -142,10 +141,10 @@ function SearchBar() {
       handleClearSearch();
     }
   };
-//Filter functions
+  //Filter functions
   const handleFilter = (tag: string) => {
     setFilterTag(tag);
-  }
+  };
   return (
     <div className="flex flex-col gap-5">
       <div className="flex items-center gap-5 rounded-lg p-2 flex-grow">
@@ -159,10 +158,11 @@ function SearchBar() {
         />
       </div>
       <div className="flex gap-5">
-        <Button onClick={() => handleFilter("")}>
-          All tags
-        </Button>
-        <Button variant="destructive" onClick={() => handleFilter("# personal")}>
+        <Button onClick={() => handleFilter("")}>All tags</Button>
+        <Button
+          variant="destructive"
+          onClick={() => handleFilter("# personal")}
+        >
           # personal
         </Button>
 
@@ -179,12 +179,12 @@ function SearchBar() {
 
       <div className="rounded-xl border overflow-hidden bg-background shadow-md">
         <div className="max-h-[60vh] overflow-y-auto">
-          <table className="">
+          <table className="w-full table-fixed">
             <thead className="sticky top-0 bg-background border-b-2 border-border z-10">
               <tr>
-                <th className="p-3 text-left font-medium">Status</th>
+                <th className="p-3 text-left font-medium w-16">Status</th>
                 <th className="p-3 text-left font-medium">Todo</th>
-                <th className="p-3 text-left font-medium">Actions</th>
+                <th className="p-3 text-left font-medium w-16">Action</th>
               </tr>
             </thead>
             <tbody className="overflow-y-auto ">
@@ -221,23 +221,21 @@ function SearchBar() {
                         )}
                       </button>
                     </td>
-                    <td className="p-3 flex-1 flex-col">
+                    <td className="p-3 flex-col">
                       <span
-                        className={`text-base ${
+                        className={`text-base block ${
                           item.done ? "line-through text-muted-foreground" : ""
                         }`}
                       >
                         {item.title}
                       </span>
-                      {item.tag &&
-                      <div className="pt-2">
-                      <Button variant="ghost">
-                        {item.tag}
-                      </Button>
-                      </div>
-                      }
+                      {item.tag && (
+                        <div className="pt-2">
+                          <Button variant="ghost">{item.tag}</Button>
+                        </div>
+                      )}
                     </td>
-                    <td className="p-3 w-16">
+                    <td className="p-3 w-16 text-center">
                       <button onClick={() => handleDelete(item._id)}>
                         <Trash className="text-border hover:text-foreground/90 transition-colors" />
                       </button>
@@ -355,9 +353,7 @@ function SearchBar() {
 //     </div>
 //   );
 // }
-function EditTodo() {
-  return <div></div>;
-}
+
 function CreateTodoInput() {
   const createTodo = useMutation(api.todos.createTodo);
   const [title, setTitle] = useState("");
@@ -369,7 +365,7 @@ function CreateTodoInput() {
     if (!title.trim() || loading) return;
     setLoading(true);
     try {
-      await createTodo({ title, tag});
+      await createTodo({ title, tag });
       setTitle("");
       toast.success("Todo added");
     } catch {
@@ -386,38 +382,39 @@ function CreateTodoInput() {
     }
   };
 
-  return (<div className="flex-1 flex gap-3 items-center">
-    <div className="flex-1 relative flex gap-3 items-center ">
-      <Input
-        className="w-full focus-visible:ring-offset-0 pr-8 py-6 text-base"
-        disabled={loading}
-        placeholder="Type your todo here..."
-        onChange={(e) => setTitle(e.target.value)}
-        onKeyDown={handleKeyDown}
-        value={title}
-      />
-      {title.trim() && (
-        <button
-          onClick={handleSubmit}
+  return (
+    <div className="flex-1 flex gap-3 items-center">
+      <div className="flex-1 relative flex gap-3 items-center ">
+        <Input
+          className="w-full focus-visible:ring-offset-0 pr-8 py-6 text-base"
           disabled={loading}
-          className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-5 w-5"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
+          placeholder="Type your todo here..."
+          onChange={(e) => setTitle(e.target.value)}
+          onKeyDown={handleKeyDown}
+          value={title}
+        />
+        {title.trim() && (
+          <button
+            onClick={handleSubmit}
+            disabled={loading}
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 4v16m8-8H4"
-            />
-          </svg>
-        </button>
-      )}
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-5 w-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 4v16m8-8H4"
+              />
+            </svg>
+          </button>
+        )}
       </div>
       <div>
         <DropdownMenu>
@@ -428,10 +425,7 @@ function CreateTodoInput() {
             className="w-56 bg-background p-5 rounded-xl shadow mx-5 my-10"
             align="start"
           >
-            <DropdownMenuRadioGroup
-              value={tag}
-              onValueChange={setTag}
-            >
+            <DropdownMenuRadioGroup value={tag} onValueChange={setTag}>
               <DropdownMenuRadioItem
                 value="# personal"
                 className="hover:bg-secondary rounded-xl px-2 py-1 flex gap-2"
