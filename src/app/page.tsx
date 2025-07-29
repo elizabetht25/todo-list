@@ -204,7 +204,7 @@ function SearchBar() {
                 searchResults.map((item) => (
                   <tr
                     key={item._id}
-                    className="border-t hover:bg-muted/20 transition-colors"
+                    className="border-t hover:bg-muted/20 transition-colors group"
                   >
                     <td className="p-3 w-16">
                       <button
@@ -248,7 +248,7 @@ function SearchBar() {
                       )}
                     </td>
                     <td className="p-3 w-16 text-center">
-                      <button onClick={() => handleDelete(item._id)} className="opacity-0 hover:opacity-100 transition-opacity">
+                      <button onClick={() => handleDelete(item._id)} className="opacity-0 group-hover:opacity-100 transition-opacity">
                         <Trash className="text-border hover:text-foreground/90 transition-colors" />
                       </button>
                     </td>
