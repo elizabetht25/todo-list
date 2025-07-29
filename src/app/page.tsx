@@ -80,11 +80,14 @@ function SearchBar() {
   const [searchValue, setSearchValue] = useState("");
   const [loading, setLoading] = useState(false);
   const [debounceSearch, setDebounceSearch] = useState("");
+
 //Table constants
   const todos = useQuery(api.todos.getTodos);
   const markTodoAsDone = useMutation(api.todos.markAsDone);
   const deleteTodo = useMutation(api.todos.deleteTodo);
-
+//Filter constants
+  const [filterTag, setFilterTag] = useState("");
+//Debouncer
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebounceSearch(searchValue);
@@ -93,10 +96,14 @@ function SearchBar() {
     return () => clearTimeout(timer);
   }, [searchValue]);
 
-  const searchResults = debounceSearch.trim()
+  let searchResults = debounceSearch.trim()
     ? useQuery(api.todos.searchTodo, { title: debounceSearch })
     : useQuery(api.todos.getTodos);
 
+    if(filterTag.trim() && searchResults) {
+      searchResults = searchResults.filter((todo) => todo.tag === filterTag);
+    }
+//Loading state
   if (todos === undefined)
     return <p className="text-center py-4">Loading...</p>;
 
@@ -106,7 +113,7 @@ function SearchBar() {
         No todos yet. Add some below!
       </div>
     );
-
+//Table functions
   const handleToggle = async (id: Id<"todos">) => {
     try {
       await markTodoAsDone({ id });
@@ -124,19 +131,21 @@ function SearchBar() {
       toast.error("Failed to delete todo");
     }
   };
-
+//Search bar functions
   const handleClearSearch = () => {
     setSearchValue("");
     setDebounceSearch("");
   };
-
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleClearSearch();
     }
   };
-
+//Filter functions
+  const handleFilter = (tag: string) => {
+    setFilterTag(tag);
+  }
   return (
     <div className="flex flex-col gap-5">
       <div className="flex items-center gap-5 rounded-lg p-2 flex-grow">
@@ -150,20 +159,20 @@ function SearchBar() {
         />
       </div>
       <div className="flex gap-5">
-        <Button>
+        <Button onClick={() => handleFilter("")}>
           All tags
         </Button>
-        <Button variant="destructive">
+        <Button variant="destructive" onClick={() => handleFilter("# personal")}>
           # personal
         </Button>
 
-        <Button variant="destructive">
+        <Button variant="destructive" onClick={() => handleFilter("# work")}>
           # work
         </Button>
-        <Button variant="destructive">
+        <Button variant="destructive" onClick={() => handleFilter("# bills")}>
           # bills
         </Button>
-        <Button variant="destructive">
+        <Button variant="destructive" onClick={() => handleFilter("# urgent")}>
           # urgent
         </Button>
       </div>
@@ -221,7 +230,7 @@ function SearchBar() {
                         {item.title}
                       </span>
                       {item.tag &&
-                      <div>
+                      <div className="pt-2">
                       <Button variant="ghost">
                         {item.tag}
                       </Button>

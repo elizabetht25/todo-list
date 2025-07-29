@@ -70,23 +70,7 @@ const searchUnDoneTodos = await ctx.db.query("todos")
     return [...searchUnDoneTodos, ...searchDoneTodos]
   },
 });
-export const getTodosByTag = query({
-  args:{
-    tag: v.string(),
-  },
-  handler: async (ctx , args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) {
-      return [];
-    }
-    return await ctx.db
-    .query("todos")
-    .withSearchIndex("search_tag", (q) =>
-      q.search("tag", args.tag).eq("createdBy", userId)
-    )
-    .collect();
-  }
-})
+
 export const markAsDone = mutation({
   args: {
     id: v.id("todos"),
