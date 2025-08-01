@@ -42,23 +42,23 @@ type Checked = DropdownMenuCheckboxItemProps["checked"];
 export default function Home() {
   //User constants
   const user = useQuery(api.todos.getUser);
- 
+
   return (
     <div className="h-screen flex flex-col items-center justify-between p-4 bg-gradient-to-b from-background to-muted/20">
       <div className="w-full max-w-2xl mt-8">
         <div className="gap-5 items-center flex">
           <Authenticated>
             <h1 className="text-2xl font-bold">Welcome, {user?.name}!</h1>
-            </Authenticated>
+          </Authenticated>
           <Unauthenticated>
-          <h1 className="text-2xl font-bold ">Your Todo List</h1>
+            <h1 className="text-2xl font-bold ">Your Todo List</h1>
           </Unauthenticated>
           <div className="ml-auto p-2 flex gap-2">
             <ThemeToggle />
-          <SignIn />
+            <SignIn />
           </div>
         </div>
-        
+
         <SearchBar />
       </div>
       <div
@@ -79,10 +79,8 @@ function InputBar() {
       <Unauthenticated>
         <div className="text-muted-foreground">
           Please sign in to add todos.
-          </div>
-        </Unauthenticated>
-
-  
+        </div>
+      </Unauthenticated>
     </div>
   );
 }
@@ -92,10 +90,14 @@ function SearchBar() {
   const [loading, setLoading] = useState(false);
   const [debounceSearch, setDebounceSearch] = useState("");
 
+  //Valid tags
+  const validTags = ["#personal", "#work", "#bills", "#urgent"];
+
   //Table constants
   const todos = useQuery(api.todos.getTodos);
   const markTodoAsDone = useMutation(api.todos.markAsDone);
   const deleteTodo = useMutation(api.todos.deleteTodo);
+
   //Filter constants
   const [filterTag, setFilterTag] = useState("");
   //Debouncer
@@ -107,9 +109,47 @@ function SearchBar() {
     return () => clearTimeout(timer);
   }, [searchValue]);
 
-  let searchResults = debounceSearch.trim()
-    ? useQuery(api.todos.searchTodo, { title: debounceSearch })
-    : useQuery(api.todos.getTodos);
+  const handleSearchInput = (input: string) => {
+    input = input.trim();
+
+    if (input.includes("#")) {
+      const tagMatch = input.substring(input.indexOf("#")).match(/#\w+/);
+      if (tagMatch) {
+        const potentialTag = tagMatch[0];
+        if(potentialTag == undefined) return { type: "title", value: input };
+      
+      if (validTags.includes(potentialTag.toLowerCase())) {
+        return { type: "tag", value: potentialTag };
+      }}
+    } else {
+      return { type: "title", value: input };
+    }
+  };
+
+  const searchInput = handleSearchInput(debounceSearch);
+
+  const titleSearchResults = useQuery(
+    api.todos.searchTodo, 
+    searchInput?.type === "title" && searchInput.value.trim() 
+      ? { title: searchInput.value } 
+      : "skip"
+  );
+
+  let searchResults;
+
+  if(searchInput && searchInput.type === "tag") {
+searchResults = todos;
+if(searchResults){
+  searchResults = searchResults.filter((todo) => todo.tag === searchInput.value); 
+}
+  } else if (searchInput?.value.trim()) {
+    searchResults = titleSearchResults;
+  } else {
+    searchResults = todos;
+  }
+  // let searchResults = debounceSearch.trim()
+  //   ? useQuery(api.todos.searchTodo, { title: debounceSearch })
+  //   : useQuery(api.todos.getTodos);
 
   if (filterTag.trim() && searchResults) {
     searchResults = searchResults.filter((todo) => todo.tag === filterTag);
@@ -170,22 +210,36 @@ function SearchBar() {
         />
       </div>
       <div className="flex gap-5">
-        <Button onClick={() => handleFilter("")}>All tags</Button>
         <Button
-          variant="ghost"
-          onClick={() => handleFilter("# personal")}
+          variant={filterTag === "" ? "default" : "ghost"}
+          onClick={() => handleFilter("")}
         >
-          # personal
+          All tags
+        </Button>
+        <Button
+          variant={filterTag === "#personal" ? "default" : "ghost"}
+          onClick={() => handleFilter("#personal")}
+        >
+          #personal
         </Button>
 
-        <Button variant="ghost" onClick={() => handleFilter("# work")}>
-          # work
+        <Button
+          variant={filterTag === "#work" ? "default" : "ghost"}
+          onClick={() => handleFilter("#work")}
+        >
+          #work
         </Button>
-        <Button variant="ghost" onClick={() => handleFilter("# bills")}>
-          # bills
+        <Button
+          variant={filterTag === "#bills" ? "default" : "ghost"}
+          onClick={() => handleFilter("#bills")}
+        >
+          #bills
         </Button>
-        <Button variant="ghost" onClick={() => handleFilter("# urgent")}>
-          # urgent
+        <Button
+          variant={filterTag === "#urgent" ? "default" : "ghost"}
+          onClick={() => handleFilter("#urgent")}
+        >
+          #urgent
         </Button>
       </div>
 
@@ -248,7 +302,10 @@ function SearchBar() {
                       )}
                     </td>
                     <td className="p-3 w-16 text-center">
-                      <button onClick={() => handleDelete(item._id)} className="opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button
+                        onClick={() => handleDelete(item._id)}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
                         <Trash className="text-border hover:text-foreground/90 transition-colors" />
                       </button>
                     </td>
@@ -267,7 +324,7 @@ function CreateTodoInput() {
   const [title, setTitle] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const [tag, setTag] = React.useState("personal");
+  const [tag, setTag] = React.useState("#personal");
 
   const handleSubmit = async () => {
     if (!title.trim() || loading) return;
@@ -335,32 +392,32 @@ function CreateTodoInput() {
           >
             <DropdownMenuRadioGroup value={tag} onValueChange={setTag}>
               <DropdownMenuRadioItem
-                value="# personal"
+                value="#personal"
                 className="hover:bg-secondary rounded-xl px-2 py-1 flex gap-2"
               >
                 Personal
-                {tag == "# personal" && <Check className="w-4" />}
+                {tag == "#personal" && <Check className="w-4" />}
               </DropdownMenuRadioItem>
               <DropdownMenuRadioItem
-                value="# work"
+                value="#work"
                 className="hover:bg-secondary rounded-xl px-2 py-1 flex gap-2"
               >
                 Work
-                {tag == "# work" && <Check className="w-4" />}
+                {tag == "#work" && <Check className="w-4" />}
               </DropdownMenuRadioItem>
               <DropdownMenuRadioItem
-                value="# bills"
+                value="#bills"
                 className="hover:bg-secondary rounded-xl px-2 py-1 flex gap-2"
               >
                 Bills
-                {tag == "# bills" && <Check className="w-4" />}
+                {tag == "#bills" && <Check className="w-4" />}
               </DropdownMenuRadioItem>
               <DropdownMenuRadioItem
-                value="# urgent"
+                value="#urgent"
                 className="hover:bg-secondary rounded-xl px-2 py-1 flex gap-2"
               >
                 Urgent
-                {tag == "# urgent" && <Check className="w-4" />}
+                {tag == "#urgent" && <Check className="w-4" />}
               </DropdownMenuRadioItem>
             </DropdownMenuRadioGroup>
           </DropdownMenuContent>
