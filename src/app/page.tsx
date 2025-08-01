@@ -12,7 +12,7 @@ import { api } from "../../convex/_generated/api";
 import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Id } from "../../convex/_generated/dataModel";
-import { Check, Pencil, Search, Trash } from "lucide-react";
+import { Check, Ellipsis, Pencil, Search, Trash } from "lucide-react";
 import { editTodo } from "../../convex/todos";
 import {
   DropdownMenu,
@@ -48,7 +48,7 @@ export default function Home() {
       <div className="w-full max-w-2xl mt-8">
         <div className="gap-5 items-center flex">
           <Authenticated>
-            <h1 className="text-2xl font-bold">Welcome, {user?.name}!</h1>
+            <h1 className="text-2xl font-bold">Welcome, {user?.name?.split(" ")[0]}!</h1>
           </Authenticated>
           <Unauthenticated>
             <h1 className="text-2xl font-bold ">Your Todo List</h1>
@@ -62,7 +62,7 @@ export default function Home() {
         <SearchBar />
       </div>
       <div
-        className="w-full max-w-2xl mb-8 fixed bottom-8 left-1/2 transform -translate-x-1/2"
+        className="w-full max-w-2xl mb-8 fixed bottom-2 left-1/2 transform -translate-x-1/2"
         style={{ maxWidth: "calc(100% - 2rem)" }}
       >
         <InputBar />
@@ -100,6 +100,7 @@ function SearchBar() {
 
   //Filter constants
   const [filterTag, setFilterTag] = useState("");
+  
   //Debouncer
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -302,12 +303,35 @@ if(searchResults){
                       )}
                     </td>
                     <td className="p-3 w-16 text-center">
-                      <button
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" className="w-8 h-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Ellipsis className="w-4 h-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent
+                          align="end"
+                          className="bg-background p-2 rounded-lg shadow-lg w-40"
+                        >
+                          <DropdownMenuItem className="flex items-center gap-2 hover:cursor-pointer hover:text-border transition-colors text-foreground hover:bg-secondary/20 rounded-lg px-2 py-1">
+                            <Pencil className="w-4 h-4" />
+                            Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => handleDelete(item._id)}
+                            className="flex items-center gap-2 hover:cursor-pointer hover:text-border transition-colors text-foreground hover:bg-secondary/20 rounded-lg px-2 py-1"
+                          >
+                            <Trash className="w-4 h-4" />
+                            Delete
+                          </DropdownMenuItem>
+                          </DropdownMenuContent>
+                      </DropdownMenu>
+                      {/* <button
                         onClick={() => handleDelete(item._id)}
                         className="opacity-0 group-hover:opacity-100 transition-opacity"
                       >
                         <Trash className="text-border hover:text-foreground/90 transition-colors" />
-                      </button>
+                      </button> */}
                     </td>
                   </tr>
                 ))}

@@ -19,10 +19,10 @@ export function SignIn() {
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="secondary" className="w-10 h-10 rounded-full">
-            <User className="w-6 h-6" />
+            <User className="w-10 h-10" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="center" className="bg-primary text-primary-foreground p-2 mt-2 rounded-xl ">
+        <DropdownMenuContent align="center" className="bg-primary text-primary-foreground p-2 mt-2 rounded-xl hover:cursor-pointer">
           <DropdownMenuItem onClick={handleSignOut}>
             Sign out
           </DropdownMenuItem>
